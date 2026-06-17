@@ -10,3 +10,6 @@ Route::post('/payment-process', [PaymentController::class, 'process'])
 
 Route::get('/payment-history', [PaymentController::class, 'history'])
     ->name('payment.history');
+
+Route::get('/receipt/{id}', [PaymentController::class, 'receipt'])
+    ->name('payment.receipt');

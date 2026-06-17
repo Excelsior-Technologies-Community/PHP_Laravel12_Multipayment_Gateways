@@ -87,8 +87,23 @@
 
                     <div class="col-md-4">
 
-                        <input type="text" id="searchInput" class="form-control search-box"
-                            placeholder="Search Transaction...">
+                        <form method="GET">
+
+                            <div class="input-group">
+
+                                <input type="text"
+                                    name="search"
+                                    class="form-control search-box"
+                                    placeholder="Search Transaction..."
+                                    value="{{ request('search') }}">
+
+                                <button class="btn btn-primary">
+                                    Search
+                                </button>
+
+                            </div>
+
+                        </form>
 
                     </div>
 
@@ -108,6 +123,7 @@
                                 <th>Amount</th>
                                 <th>Status</th>
                                 <th>Date</th>
+                                <th>Receipt</th>
 
                             </tr>
 
@@ -117,61 +133,88 @@
 
                             @forelse($payments as $payment)
 
-                                <tr>
+                            <tr>
 
-                                    <td>
-                                        {{ $payment->id }}
-                                    </td>
+                                <td>
+                                    {{ $payment->id }}
+                                </td>
 
-                                    <td>
+                                <td>
 
-                                        @if($payment->gateway == 'Stripe')
-                                            <span class="badge bg-primary">
-                                                Stripe
-                                            </span>
+                                    @if($payment->gateway == 'Stripe')
+                                    <span class="badge bg-primary">
+                                        Stripe
+                                    </span>
 
-                                        @elseif($payment->gateway == 'PayPal')
-                                            <span class="badge bg-info">
-                                                PayPal
-                                            </span>
+                                    @elseif($payment->gateway == 'PayPal')
+                                    <span class="badge bg-info">
+                                        PayPal
+                                    </span>
 
-                                        @else
-                                            <span class="badge bg-warning text-dark">
-                                                Razorpay
-                                            </span>
-                                        @endif
+                                    @else
+                                    <span class="badge bg-warning text-dark">
+                                        Razorpay
+                                    </span>
+                                    @endif
 
-                                    </td>
+                                </td>
 
-                                    <td>
-                                        {{ $payment->transaction_id }}
-                                    </td>
+                                <td>
+                                    {{ $payment->transaction_id }}
+                                </td>
 
-                                    <td>
-                                        ₹{{ number_format($payment->amount, 2) }}
-                                    </td>
+                                <td>
+                                    ₹{{ number_format($payment->amount, 2) }}
+                                </td>
 
-                                    <td>
-                                        <span class="badge bg-success badge-status">
-                                            {{ $payment->status }}
-                                        </span>
-                                    </td>
+                                <td>
 
-                                    <td>
-                                        {{ $payment->created_at->format('d M Y h:i A') }}
-                                    </td>
+                                    @if($payment->status == 'Success')
 
-                                </tr>
+                                    <span class="badge bg-success badge-status">
+                                        Success
+                                    </span>
+
+                                    @elseif($payment->status == 'Pending')
+
+                                    <span class="badge bg-warning text-dark badge-status">
+                                        Pending
+                                    </span>
+
+                                    @else
+
+                                    <span class="badge bg-danger badge-status">
+                                        Failed
+                                    </span>
+
+                                    @endif
+
+                                </td>
+
+                                <td>
+                                    {{ $payment->created_at->format('d M Y h:i A') }}
+                                </td>
+
+                                <td>
+
+                                    <a href="{{ route('payment.receipt', $payment->id) }}"
+                                        class="btn btn-dark btn-sm">
+                                        PDF
+                                    </a>
+
+                                </td>
+
+                            </tr>
 
                             @empty
 
-                                <tr>
+                            <tr>
 
-                                    <td colspan="6" class="text-center">
-                                        No Payment Records Found
-                                    </td>
+                                <td colspan="7" class="text-center">
+                                    No Payment Records Found
+                                </td>
 
-                                </tr>
+                            </tr>
 
                             @endforelse
 
@@ -202,27 +245,6 @@
         </div>
 
     </div>
-
-    <script>
-
-        document.getElementById('searchInput')
-            .addEventListener('keyup', function () {
-
-                let value = this.value.toLowerCase();
-
-                let rows = document.querySelectorAll('#paymentTable tbody tr');
-
-                rows.forEach(row => {
-
-                    row.style.display =
-                        row.innerText.toLowerCase().includes(value)
-                            ? ''
-                            : 'none';
-                });
-
-            });
-
-    </script>
 
 </body>
 
