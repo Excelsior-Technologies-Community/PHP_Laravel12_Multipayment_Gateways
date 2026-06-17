@@ -100,6 +100,79 @@
 
         </div>
 
+        <!-- Gateway Revenue Analytics -->
+
+        <div class="row mb-4">
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card shadow border-0">
+
+                    <div class="card-body text-center">
+
+                        <div style="font-size:40px;">💳</div>
+
+                        <h5>
+                            Stripe Revenue
+                        </h5>
+
+                        <h3>
+                            ₹{{ number_format($stripeRevenue ?? 0, 2) }}
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card shadow border-0">
+
+                    <div class="card-body text-center">
+
+                        <div style="font-size:40px;">🅿️</div>
+
+                        <h5>
+                            PayPal Revenue
+                        </h5>
+
+                        <h3>
+                            ₹{{ number_format($paypalRevenue ?? 0, 2) }}
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4 mb-3">
+
+                <div class="card shadow border-0">
+
+                    <div class="card-body text-center">
+
+                        <div style="font-size:40px;">🇮🇳</div>
+
+                        <h5>
+                            Razorpay Revenue
+                        </h5>
+
+                        <h3>
+                            ₹{{ number_format($razorpayRevenue ?? 0, 2) }}
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
         <!-- Payment Form -->
 
         <div class="card payment-card shadow-lg">
@@ -113,15 +186,15 @@
             <div class="card-body">
 
                 @if ($errors->any())
-                    <div class="alert alert-danger">
+                <div class="alert alert-danger">
 
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
 
-                    </div>
+                </div>
                 @endif
 
                 <form action="{{ route('payment.process') }}" method="POST">
