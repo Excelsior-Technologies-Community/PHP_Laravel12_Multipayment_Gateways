@@ -87,23 +87,26 @@
 
                     <div class="col-md-4">
 
-                        <form method="GET">
+                        <div class="input-group">
 
-                            <div class="input-group">
+                            <input type="text"
+                                id="liveSearch"
+                                class="form-control search-box"
+                                placeholder="🔍 Live Search Transaction..."
+                                value="{{ request('search') }}">
 
-                                <input type="text"
-                                    name="search"
-                                    class="form-control search-box"
-                                    placeholder="Search Transaction..."
-                                    value="{{ request('search') }}">
+                            <button class="btn btn-primary" onclick="clearSearch()">
+                                Clear
+                            </button>
 
-                                <button class="btn btn-primary">
-                                    Search
-                                </button>
+                        </div>
 
+                        <div id="searchLoader" class="text-center mt-2" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
-
-                        </form>
+                            <small class="text-muted">Searching...</small>
+                        </div>
 
                     </div>
 
@@ -245,6 +248,103 @@
         </div>
 
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let searchTimeout;
+
+        $(document).ready(function() {
+            $('#liveSearch').on('input', function() {
+                const searchTerm = $(this).val();
+
+                clearTimeout(searchTimeout);
+
+                if (searchTerm.length === 0) {
+                    clearSearch();
+                    return;
+                }
+
+                $('#searchLoader').show();
+
+                searchTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: '{{ route("payment.history.search") }}',
+                        method: 'GET',
+                        data: { search: searchTerm },
+                        success: function(response) {
+                            updateTable(response.payments);
+                            $('#searchLoader').hide();
+                        },
+                        error: function() {
+                            $('#searchLoader').hide();
+                            alert('Error searching transactions. Please try again.');
+                        }
+                    });
+                }, 500);
+            });
+        });
+
+        function updateTable(payments) {
+            const tbody = $('#paymentTable tbody');
+            tbody.empty();
+
+            if (payments.length === 0) {
+                tbody.html('<tr><td colspan="7" class="text-center">No Payment Records Found</td></tr>');
+                return;
+            }
+
+            payments.forEach(function(payment) {
+                let gatewayBadge = '';
+                if (payment.gateway === 'Stripe') {
+                    gatewayBadge = '<span class="badge bg-primary">Stripe</span>';
+                } else if (payment.gateway === 'PayPal') {
+                    gatewayBadge = '<span class="badge bg-info">PayPal</span>';
+                } else {
+                    gatewayBadge = '<span class="badge bg-warning text-dark">Razorpay</span>';
+                }
+
+                let statusBadge = '';
+                if (payment.status === 'Success') {
+                    statusBadge = '<span class="badge bg-success badge-status">Success</span>';
+                } else if (payment.status === 'Pending') {
+                    statusBadge = '<span class="badge bg-warning text-dark badge-status">Pending</span>';
+                } else {
+                    statusBadge = '<span class="badge bg-danger badge-status">Failed</span>';
+                }
+
+                const date = new Date(payment.created_at);
+                const formattedDate = date.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                const row = `
+                    <tr>
+                        <td>${payment.id}</td>
+                        <td>${gatewayBadge}</td>
+                        <td>${payment.transaction_id}</td>
+                        <td>₹${parseFloat(payment.amount).toFixed(2)}</td>
+                        <td>${statusBadge}</td>
+                        <td>${formattedDate}</td>
+                        <td>
+                            <a href="/receipt/${payment.id}" class="btn btn-dark btn-sm">PDF</a>
+                        </td>
+                    </tr>
+                `;
+
+                tbody.append(row);
+            });
+        }
+
+        function clearSearch() {
+            $('#liveSearch').val('');
+            location.reload();
+        }
+    </script>
 
 </body>
 

@@ -254,6 +254,10 @@
 
                         </a>
 
+                        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#simulationModal">
+                            ⚙️ Simulate
+                        </button>
+
                     </div>
 
                 </form>
@@ -263,6 +267,119 @@
         </div>
 
     </div>
+
+    <!-- Simulation Modal -->
+    <div class="modal fade" id="simulationModal" tabindex="-1" aria-labelledby="simulationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="simulationModalLabel">⚙️ Mock Gateway Failure Simulation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>ℹ️ Simulation Mode:</strong> Test different payment scenarios by selecting a specific outcome.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Enable Simulation</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enableSimulation" name="enable_simulation">
+                            <label class="form-check-label" for="enableSimulation">Activate Mock Simulation</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Simulation Status</label>
+                        <select class="form-select" id="simulationStatus" name="simulation_status" disabled>
+                            <option value="random">🎲 Random (Default)</option>
+                            <option value="Success">✅ Success</option>
+                            <option value="Pending">⏳ Pending</option>
+                            <option value="Failed">❌ Failed</option>
+                        </select>
+                        <small class="text-muted">Select a specific status to force that outcome</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Simulation Timing</label>
+                        <select class="form-select" id="simulationTiming" name="simulation_timing" disabled>
+                            <option value="instant">⚡ Instant (No Delay)</option>
+                            <option value="fast">🚀 Fast (1-2 seconds)</option>
+                            <option value="normal">🕐 Normal (3-5 seconds)</option>
+                            <option value="slow">🐌 Slow (5-10 seconds)</option>
+                        </select>
+                        <small class="text-muted">Simulate network latency</small>
+                    </div>
+
+                    <div class="alert alert-warning mt-3" id="simulationWarning" style="display: none;">
+                        <strong>⚠️ Warning:</strong> Simulation mode will override normal payment processing. Use for testing only.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="applySimulation()">Apply Simulation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('enableSimulation').addEventListener('change', function() {
+            const isEnabled = this.checked;
+            document.getElementById('simulationStatus').disabled = !isEnabled;
+            document.getElementById('simulationTiming').disabled = !isEnabled;
+            document.getElementById('simulationWarning').style.display = isEnabled ? 'block' : 'none';
+        });
+
+        function applySimulation() {
+            const enableSimulation = document.getElementById('enableSimulation').checked;
+            const simulationStatus = document.getElementById('simulationStatus').value;
+            const simulationTiming = document.getElementById('simulationTiming').value;
+
+            const form = document.querySelector('form[action="{{ route('payment.process') }}"]');
+
+            let simulationInput = document.createElement('input');
+            simulationInput.type = 'hidden';
+            simulationInput.name = 'enable_simulation';
+            simulationInput.value = enableSimulation ? '1' : '0';
+            form.appendChild(simulationInput);
+
+            let statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'simulation_status';
+            statusInput.value = simulationStatus;
+            form.appendChild(statusInput);
+
+            let timingInput = document.createElement('input');
+            timingInput.type = 'hidden';
+            timingInput.name = 'simulation_timing';
+            timingInput.value = simulationTiming;
+            form.appendChild(timingInput);
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('simulationModal'));
+            modal.hide();
+
+            if (enableSimulation && simulationTiming !== 'instant') {
+                const delays = {
+                    'fast': 1500,
+                    'normal': 3500,
+                    'slow': 7500
+                };
+                const delay = delays[simulationTiming] || 0;
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Simulating...';
+
+                setTimeout(() => {
+                    form.submit();
+                }, delay);
+            } else {
+                form.submit();
+            }
+        }
+    </script>
 
 </body>
 
