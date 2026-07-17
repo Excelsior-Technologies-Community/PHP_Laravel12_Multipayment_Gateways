@@ -70,20 +70,28 @@ class PaymentController extends Controller
             'amount' => $request->amount
         ]);
 
-        $statuses = [
-            'Success',
-            'Pending',
-            'Failed'
-        ];
+        $isSimulation = $request->has('enable_simulation');
+        $simulationStatus = $request->simulation_status ?? 'random';
 
-        $response['status'] =
-            $statuses[array_rand($statuses)];
+        if ($isSimulation && $simulationStatus !== 'random') {
+            $response['status'] = $simulationStatus;
+        } else {
+            $statuses = [
+                'Success',
+                'Pending',
+                'Failed'
+            ];
+
+            $response['status'] =
+                $statuses[array_rand($statuses)];
+        }
 
         $payment = Payment::create([
             'gateway' => $response['gateway'],
             'transaction_id' => $response['transaction_id'],
             'amount' => $request->amount,
-            'status' => $response['status']
+            'status' => $response['status'],
+            'is_simulation' => $isSimulation ? 1 : 0
         ]);
 
         return view(
@@ -110,6 +118,23 @@ class PaymentController extends Controller
             'payments.history',
             compact('payments', 'search')
         );
+    }
+
+    public function search(Request $request)
+    {
+        $search = $request->query('search', '');
+
+        $payments = Payment::when($search, function ($query) use ($search) {
+            $query->where('gateway', 'like', "%{$search}%")
+                ->orWhere('transaction_id', 'like', "%{$search}%")
+                ->orWhere('status', 'like', "%{$search}%");
+        })
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return response()->json([
+            'payments' => $payments
+        ]);
     }
 
     public function receipt($id)

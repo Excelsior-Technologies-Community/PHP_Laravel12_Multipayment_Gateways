@@ -11,5 +11,6 @@ class Payment extends Model
         'transaction_id',
         'amount',
         'status',
+        'is_simulation',
     ];
 }
